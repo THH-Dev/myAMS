@@ -1,0 +1,97 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Quản lý Bảng</h1>
+  
+  <form method="POST" action="/manage_table">
+    <div class="form-group">
+      <label for="table_name">Tên Bảng:</label>
+      <input type="text" class="form-control" name="table_name" required>
+    </div>
+    <input type="submit" class="btn btn-primary" value="Truy vấn">
+  </form>
+
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+
+  {% if result %}
+    <h2>Kết quả Truy vấn</h2>
+    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addRowModal">
+      Thêm Hàng Mới
+    </button>
+    <br><br>
+    <form method="POST" action="/update_cells">
+      <input type="hidden" name="table_name" value="{{ request.form['table_name'] }}">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              {% for column in columns %}
+                <th>{{ column }}</th>
+              {% endfor %}
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row_index, row in result|enumerate %}
+              <tr>
+                {% for col_index, value in row|enumerate %}
+                  <td>
+                    <input type="text" class="form-control" name="values-{{ row_index }}-{{ col_index }}" value="{{ value }}">
+                  </td>
+                {% endfor %}
+                <td>
+                  <button type="submit" name="update_row" value="{{ row_index }}" class="btn btn-primary btn-sm">Cập nhật</button>
+                  <form method="POST" action="/delete_row" style="display: inline;">
+                    <input type="hidden" name="table_name" value="{{ request.form['table_name'] }}">
+                    <input type="hidden" name="primary_key_column" value="{{ columns[0] }}">
+                    <input type="hidden" name="primary_key_value" value="{{ row[0] }}">
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa hàng này?');">Xóa</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </form>
+
+    <!-- Modal for adding new row -->
+    <div class="modal fade" id="addRowModal" tabindex="-1" role="dialog" aria-labelledby="addRowModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="addRowModalLabel">Thêm Hàng Mới</h4>
+          </div>
+          <div class="modal-body">
+            <form method="POST" action="/add_row">
+              <input type="hidden" name="table_name" value="{{ request.form['table_name'] }}">
+              {% for column in columns %}
+                {% if column.lower() != 'uid' %}
+                  <input type="hidden" name="columns" value="{{ column }}">
+                  <div class="form-group">
+                    <label for="{{ column }}">{{ column }}:</label>
+                    <input type="text" class="form-control" name="values" required>
+                  </div>
+                {% endif %}
+              {% endfor %}
+              <button type="submit" class="btn btn-success">Thêm Hàng</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    $(document).ready(function() {
+      $('#addRowModal').on('shown.bs.modal', function () {
+        $(this).find('input:text:visible:first').focus();
+      });
+    });
+  </script>
+{% endblock %}

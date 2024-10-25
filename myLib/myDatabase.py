@@ -6,7 +6,7 @@ class MyDatabase(metaclass=SingletonMeta):
         self.database="template1"
         self.user="postgres"
         self.password="tanhungha"
-        self.host="localhost"
+        self.host="192.168.100.100"
         self.port="5432"
         
         # Specify the schema and table name
@@ -68,7 +68,37 @@ class MyDatabase(metaclass=SingletonMeta):
             log.error(str)
             return str
         return data
-    
+    def query2(self, cmd):
+        try:
+            # Thực thi câu lệnh SQL
+            self.cur.execute(cmd)
+            
+            sql_command = cmd.strip().upper()
+            
+            # Xử lý các câu lệnh khác nhau
+            if sql_command.startswith('SELECT'):
+                # Trường hợp SELECT (có thể có WHERE)
+                columns = [desc[0] for desc in self.cur.description]
+                data = self.cur.fetchall()
+                return columns, data  # Trả về cả tên cột và dữ liệu
+            elif sql_command.startswith('INSERT') and 'RETURNING' in sql_command.upper():
+                # Trường hợp INSERT với RETURNING
+                self.conn.commit()
+                return self.cur.fetchone(), None
+            elif sql_command.startswith(('INSERT', 'UPDATE', 'DELETE')):
+                # Trường hợp INSERT, UPDATE, DELETE (có thể có WHERE)
+                self.conn.commit()
+                return "Query executed successfully", None
+            else:
+                return "Query executed without fetching data", None
+
+        except psycopg2.Error as e:
+            # Nếu có lỗi, rollback và log lỗi
+            self.conn.rollback()
+            error_msg = f"An error occurred when querying the db: {e}"
+            log.error(error_msg)
+            return error_msg, None
+
     def getPasswordLogin(self, username):
         try:
             table_name = 'accounts'

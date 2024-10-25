@@ -1,0 +1,69 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Truy vấn Cơ sở dữ liệu</h1>
+  
+  <form method="POST" action="/query" id="queryForm">
+    <div class="form-group">
+      <label for="sql_query">Nhập lệnh SQL:</label>
+      <textarea class="form-control" id="sql_query" name="sql_query" rows="5"></textarea>
+    </div>
+    <input type="submit" class="btn btn-primary" value="Thực hiện truy vấn">
+  </form>
+
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+
+  {% if result %}
+    <h2>Kết quả truy vấn</h2>
+    {% if columns %}
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            {% for column in columns %}
+              <th>{{ column }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in result %}
+            <tr>
+              {% for value in row %}
+                <td>{{ value }}</td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>{{ result }}</p>
+    {% endif %}
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/sql/sql.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.css">
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var sqlEditor = CodeMirror.fromTextArea(document.getElementById('sql_query'), {
+      mode: 'text/x-sql',
+      lineNumbers: true,
+      theme: 'default',
+      extraKeys: {"Ctrl-Space": "autocomplete"}
+    });
+
+    document.getElementById('queryForm').addEventListener('submit', function(e) {
+      var sqlQuery = sqlEditor.getValue().trim();
+      if (sqlQuery === '') {
+        e.preventDefault();
+        alert('Vui lòng nhập lệnh SQL trước khi thực hiện truy vấn.');
+      } else {
+        document.getElementById('sql_query').value = sqlQuery;
+      }
+    });
+  });
+</script>
+{% endblock %}
