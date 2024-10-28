@@ -14,6 +14,7 @@
           <li><a href="/">Home</a></li>
           <li><a href="/about">About</a></li>
           <li><a href="/articles">Articles</a></li>
+          
         </ul>
 
         <ul class="nav navbar-nav navbar-right">
@@ -21,6 +22,7 @@
             <li><a href="/dashboard">Dashboard</a></li>
             <li><a href="{{ url_for('query_database') }}">Query Database</a></li> <!-- Thêm liên kết mới -->
             <li><a href="/manage_table">Manage_table</a></li>
+            <li><a href="/query_orderdetail">Query Order Detail</a></li> <!-- Thêm liên kết mới -->
             <li><a href="/logout">Logout</a></li>
            
           {% else %}

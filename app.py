@@ -135,8 +135,11 @@ def query_database():
     result = None
     columns = None
     error = None
+    sql_query = None  # Thêm biến để lưu lệnh SQL
+
     if request.method == 'POST':
         sql_query = request.form['sql_query']
+        session['last_sql_query'] = sql_query  # Lưu lệnh SQL vào session
         
         if myDatabase.ensure_connection():
             try:
@@ -154,7 +157,10 @@ def query_database():
             finally:
                 myDatabase.disconnect()
 
-    return render_template('query.html', result=result, columns=columns, error=error)
+    # Lấy lệnh SQL cuối cùng từ session
+    last_sql_query = session.get('last_sql_query', '')  # Nếu không có thì mặc định là rỗng
+
+    return render_template('query.html', result=result, columns=columns, error=error, last_sql_query=last_sql_query)
 
 
 # Query and Add Rows
@@ -166,7 +172,7 @@ def manage_table():
     error = None
     queried_table = request.args.get('table_name')  # Lấy tên bảng từ tham số URL
     table_names = myDatabase.get_table_names()
-    
+    log.info(f"queried_table:{queried_table}")
     if request.method == 'POST' or queried_table:
         if request.method == 'POST':
             queried_table = request.form['table_name']
@@ -362,12 +368,12 @@ def import_excel():
             
             if myDatabase.ensure_connection():
                 # Xóa dữ liệu cũ trong bảng
-                cmd = f'DELETE FROM "{myDatabase.schema_name}"."{table_name}";'
-                result, _ = myDatabase.query2(cmd)
+                #cmd = f'DELETE FROM "{myDatabase.schema_name}"."{table_name}";'
+                #result, _ = myDatabase.query2(cmd)
                 
-                if isinstance(result, str) and "An error occurred" in result:
-                    flash('Có lỗi xảy ra khi xóa dữ liệu cũ: ' + result, 'danger')
-                    return redirect(url_for('manage_table'))
+                #if isinstance(result, str) and "An error occurred" in result:
+                #    flash('Có lỗi xảy ra khi xóa dữ liệu cũ: ' + result, 'danger')
+                #    return redirect(url_for('manage_table'))
                 
                 # Import dữ liệu mới
                 for _, row in df.iterrows():
@@ -392,6 +398,89 @@ def import_excel():
     else:
         flash('Chỉ chấp nhận file Excel (.xlsx)', 'danger')
         return redirect(url_for('manage_table'))
+
+# Query Order Detail
+@app.route('/query_orderdetail', methods=['GET', 'POST'])
+@is_logged_in
+def query_orderdetail():
+    result = None
+    error = None
+    user_id = None
+    columns = []  # Khởi tạo `columns` là danh sách rỗng
+    user_id = request.form.get('user_id')
+    #prd_id = request.form.get('prd_id')
+    prd_id= request.form.get('prd_id')  # Lấy tên bảng từ tham số URL
+ 
+    log.info(f"prd_id:{prd_id}")
+    prd_id_cell_value = myDatabase.get_value_cell_column('prd_id','products')
+    log.info(f"prd_id:{user_id}")
+    user_id_cell_value = myDatabase.get_value_cell_column('user_id','users')
+
+    if request.method == 'POST':
+        #user_id = request.form['user_id']
+        #prd_id = request.form.get('prd_id')
+
+        if myDatabase.ensure_connection():
+            if user_id:  # Nếu có user_id
+                cmd = f'''
+                    SELECT p.ord_detail_id AS "Order ID", 
+                           p.prd_id AS "Mã sản phẩm",
+                           p.prd_qty AS "Số lượng", 
+                           p2.prd_name AS "Tên sản phẩm",
+                           c.name AS "Tên danh mục", 
+                           u.full_name AS "Họ Tên"
+                    FROM "assetDB"."orderdetail" p
+                    INNER JOIN "assetDB"."products" p2 ON p.prd_id = p2.prd_id
+                    INNER JOIN "assetDB"."users" u ON p.user_id = u.user_id
+                    INNER JOIN "assetDB"."categories" c ON c.cat_id = p2.cat_id
+                    WHERE u.user_id = '{user_id}';
+                '''
+                try:
+                    columns, result = myDatabase.query2(cmd)
+                    if isinstance(columns, str) and "An error occurred" in columns:
+                        error = columns
+                        result = None
+                    if result :
+                        result =result
+                    else:
+                        error ="Không có dữ liệu"   
+                except Exception as e:
+                    error = str(e)
+                finally:
+                    myDatabase.disconnect()
+            elif prd_id:  # Nếu có prd_id
+                cmd = f'''
+                    SELECT p.ord_detail_id AS "Order ID", 
+                           p.prd_id AS "Mã sản phẩm",
+                           p.prd_qty AS "Số lượng", 
+                           p2.prd_name AS "Tên sản phẩm",
+                           c.name AS "Tên danh mục", 
+                           u.full_name AS "Họ Tên"
+                    FROM "assetDB"."orderdetail" p
+                    INNER JOIN "assetDB"."products" p2 ON p.prd_id = p2.prd_id
+                    INNER JOIN "assetDB"."users" u ON p.user_id = u.user_id
+                    INNER JOIN "assetDB"."categories" c ON c.cat_id = p2.cat_id
+                    WHERE p.prd_id = '{prd_id}';
+                '''
+                try:
+                    columns, result = myDatabase.query2(cmd)
+                    if isinstance(columns, str) and "An error occurred" in columns:
+                        error = columns
+                        result = None
+                    if result :
+                        result =result
+                    else:
+                        error ="Không có dữ liệu"   
+                except Exception as e:
+                    error = str(e)
+                finally:
+                    myDatabase.disconnect()
+    log.info(f'Error: {error}, Result: {result} ')
+    if columns:
+        return render_template('query_orderdetail.html', result=result, columns=columns, error=error, user_id=user_id, prd_ids = prd_id_cell_value, user_ids =user_id_cell_value )
+    else:
+        return render_template('query_orderdetail.html', result=result, columns=[], error=error, user_id=user_id , prd_ids = prd_id_cell_value,user_ids =user_id_cell_value)
+
 
 @app.template_filter('enumerate')
 def enumerate_filter(iterable, start=0):

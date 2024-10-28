@@ -6,7 +6,7 @@
   <form method="POST" action="/query" id="queryForm">
     <div class="form-group">
       <label for="sql_query">Nhập lệnh SQL:</label>
-      <textarea class="form-control" id="sql_query" name="sql_query" rows="5"></textarea>
+      <textarea class="form-control" id="sql_query" name="sql_query" rows="5">{{ last_sql_query }}</textarea>
     </div>
     <input type="submit" class="btn btn-primary" value="Thực hiện truy vấn">
   </form>

@@ -1,0 +1,70 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Truy vấn Order Detail</h1>
+  <h2>Nhập User ID hoặc Product ID</h2>
+  <form method="POST" action="/query_orderdetail" class="mb-3">
+
+    <div class="form-group">
+        <label for="prd_id">Product ID:</label>
+        <select class="selectpicker form-control" id="prd_id" name="prd_id" 
+                data-live-search="true" title="Chọn product ID" 
+                onchange="if(this.value) document.getElementById('user_id').selectedIndex = -1;">
+            <option value="" disabled selected>Chọn product ID</option>
+            {% for table in prd_ids %}
+                <option value="{{ table }}">{{ table }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="user_id">User ID:</label>
+        <select class="selectpicker form-control" id="user_id" name="user_id" 
+                data-live-search="true" title="Chọn user ID" 
+                onchange="if(this.value) document.getElementById('prd_id').selectedIndex = -1;">
+            <option value="" disabled selected>Chọn user ID</option>
+            {% for table in user_ids %}
+                <option value="{{ table }}">{{ table }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!--
+    <div class="form-group">
+      <label for="user_id">User ID:</label>
+      <input type="text" class="form-control" id="user_id" name="user_id" oninput="this.value.length > 0 ? document.getElementById('prd_id').disabled = true : document.getElementById('prd_id').disabled = false;">
+    </div>
+    <div class="form-group">
+      <label for="prd_id">Product ID:</label>
+      <input type="text" class="form-control" id="prd_id" name="prd_id" oninput="this.value.length > 0 ? document.getElementById('user_id').disabled = true : document.getElementById('user_id').disabled = false;">
+    </div>
+    -->
+    <button type="submit" class="btn btn-primary">Truy vấn</button>
+  </form>
+    
+
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+
+  {% if result %}
+    <h2>Kết quả Truy vấn:</h2>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          {% for column in columns %}
+            <th>{{ column }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in result %}
+          <tr>
+            {% for value in row %}
+              <td>{{ value }}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endblock %}

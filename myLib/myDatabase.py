@@ -126,5 +126,28 @@ class MyDatabase(metaclass=SingletonMeta):
             tables = [row[0] for row in self.cur.fetchall()]
             return tables
         except psycopg2.Error as e:
+            self.conn.rollback()  # Rollback để khôi phục
             log.error(f"An error occurred when fetching table names: {e}")
+            return []
+        
+    def get_value_cell_column(self, column_name, table_name):
+        if not self.ensure_connection():
+            return []
+        
+        try:
+            # Câu truy vấn lấy giá trị duy nhất trong cột `column_name` từ bảng `table_name`
+            cmd = f'SELECT DISTINCT "{column_name}" FROM "assetDB"."{table_name}";'
+            self.cur.execute(cmd)
+            
+            # Lấy tất cả các giá trị từ kết quả truy vấn và chuyển thành danh sách
+            value_cell_column = [row[0] for row in self.cur.fetchall()]
+            
+            # In ra kết quả truy vấn
+            log.info(f"Kết quả truy vấn: {value_cell_column}")
+            
+            return value_cell_column
+        
+        except psycopg2.Error as e:
+            self.conn.rollback()  # Khôi phục kết nối khi gặp lỗi
+            log.error(f"An error occurred when fetching value column: {e}")
             return []

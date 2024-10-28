@@ -25,7 +25,7 @@
       <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addRowModal">
         Thêm Hàng Mới
       </button>
-      <a href="{{ url_for('download_excel', table_name=queried_table) }}" class="btn btn-info">Tải xuống Excel</a>
+      <a href="{{ url_for('download_excel', table_name=queried_table) }}" class="btn btn-info">Export Excel</a>
       <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#importExcelModal">
         Import Excel
       </button>
@@ -37,9 +37,9 @@
           <thead>
             <tr>
               {% for column in columns %}
-                <th>{{ column }}</th>
+                <th style="resize: horizontal; overflow: auto; white-space: nowrap; min-width: 50px;">{{ column }}</th> <!-- Thêm min-width -->
               {% endfor %}
-              <th>Hành động</th>
+              <th style="width: 150px; min-width: 150px;">Hành động</th> <!-- Thêm min-width -->
             </tr>
           </thead>
           <tbody>
@@ -47,7 +47,7 @@
               <tr>
                 {% for col_index, value in row|enumerate %}
                   <td>
-                    <input type="text" class="form-control" name="values-{{ row_index }}-{{ col_index }}" value="{{ value }}">
+                    <input type="text" class="form-control" name="values-{{ row_index }}-{{ col_index }}" value="{{ value }}" style="resize: horizontal; overflow: auto;">
                   </td>
                 {% endfor %}
                 <td>
