@@ -8,11 +8,17 @@ import io
 import os
 from flask import __version__ as flask_version
 from packaging import version
+from flask_restful import Api, Resource
+from flask_cors import CORS
 
 from myLib.myDatabase import MyDatabase
 from myLib.myLib import log
 
+from api.query_data import QueryData  # Import lớp QueryData
+
 app = Flask(__name__)
+api = Api(app)
+CORS(app)  # Enable CORS for all routes
 myDatabase = MyDatabase()
 
 # Check if user logged in
@@ -475,6 +481,9 @@ def query_orderdetail():
                     error = str(e)
                 finally:
                     myDatabase.disconnect()
+        else :
+            error = "An error occurred when connecting to db"
+            log.error ("An error occurred when connecting to db")
     log.info(f'Error: {error}, Result: {result} ')
     if columns:
         return render_template('query_orderdetail.html', result=result, columns=columns, error=error, user_id=user_id, prd_ids = prd_id_cell_value, user_ids =user_id_cell_value )
@@ -485,6 +494,10 @@ def query_orderdetail():
 @app.template_filter('enumerate')
 def enumerate_filter(iterable, start=0):
     return enumerate(iterable, start)
+
+
+
+api.add_resource(QueryData, '/api/query')
 
 if __name__ == '__main__':
     app.secret_key='tanhungha@10'

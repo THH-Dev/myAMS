@@ -113,7 +113,7 @@ class MyDatabase(metaclass=SingletonMeta):
 
     def get_table_names(self):
         if not self.ensure_connection():
-            return []
+            return ['không thể kết nối đến cơ sở dữ liệu']
 
         try:
             cmd = f"""
@@ -132,7 +132,7 @@ class MyDatabase(metaclass=SingletonMeta):
         
     def get_value_cell_column(self, column_name, table_name):
         if not self.ensure_connection():
-            return []
+            return ['không thể kết nối đến cơ sở dữ liệu']
         
         try:
             # Câu truy vấn lấy giá trị duy nhất trong cột `column_name` từ bảng `table_name`
